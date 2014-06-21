@@ -174,8 +174,11 @@ class HighScores(object):
 		self.filename = 'high_scores.txt'
 		self.score_list = None
 		try:
-			self.open_scores('r')
-			self.score_log.close()
+			#self.open_scores('r')
+			# // TODO: needs read method
+			self.read_scores()
+			self.unpack_json()
+			#self.score_log.close()
 		except:
 			self.open_scores('w')
 			self.scores = Scorecard()
@@ -194,8 +197,10 @@ class HighScores(object):
 		
 	def read_scores(self):
 		self.open_scores('r')
-		self.raw_score_list = self.score_log.read()
-		print 'raw_score_list', list(self.raw_score_list)
+		self.json_scores_text = self.score_log.read()
+		print 'self.json_scores_text: ', self.json_scores_text
+		self.json_scores_python = json.loads(self.json_scores_text)
+		print 'json_scores_python: ', self.json_scores_python
 		self.score_log.close()
 		
 	def write_scores(self, score_list):
@@ -226,6 +231,26 @@ class HighScores(object):
 		for key in cls.__dict__:
 			d[key] = cls.__dict__[key]
 		return d
+	
+	def unpack_json(self):
+		self.scores = Scorecard()
+		self.owners = Scorecard(*len(Scorecard().__dict__)*['---'])
+	
+	def sorted_cls_prop_list(self, cls):			
+		cls_numbered = cls.__class__(*[i for i in range(len(cls.__dict__))])
+		print 'cls_numbered.__dict__:', cls_numbered.__dict__
+
+		# ordered list of numbered class property tuples
+		cls_tuples = sorted(cls_numbered.__dict__.items(), key=lambda prop: prop[1])
+		print 'cls_tuples: ', cls_tuples
+		
+		cls_list = []
+		for item in cls_tuples:
+			cls_list.append(item[0])
+		print 'cls_list: ', cls_list		
+		
+	def dict_to_class(self, dictionary, cls):
+		pass
 		
 	### not used ###
 	def unpack_scores(self):
@@ -258,6 +283,7 @@ def run():
 
 def test():
 	# wins=0, rounds_played=0, guess_count=0, correct_guess_percent='0.00%'
+	'''
 	scores = {'scores': 
 	          {'wins': 0,
 	           'rounds_played': 0,
@@ -271,16 +297,21 @@ def test():
 	           'correct_guess_percent': "PEN"
 	           }
 	          }
+	
 	scores_json = json.dumps(scores, sort_keys=True, indent=4, separators=(',', ': '))
 	print scores_json
 	python_obj = json.loads(scores_json)
 	print python_obj['owners']
 	print python_obj['scores']
-	
+	'''
 	h = HighScores()
 	#h.read_scores()
 	#h.unpack_scores()
 
-test()
+def test2():
+	h = HighScores()
+	#h.dict_to_class('','')
+	h.sorted_cls_prop_list(Scorecard())
+test2()
 
 

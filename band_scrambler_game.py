@@ -1,17 +1,19 @@
 import os, sys
 import random
+import json
 from random import randint
 from private import *
 
 class Scorecard():
 	
-	def __init__(self):
-		self.wins = 0
-		self.games_played = 0
-		self.guess_count = 0
+	def __init__(self, wins=0, rounds_played=0, guess_count=0, correct_guess_percent='0.00%'):
+		self.wins = wins
+		self.rounds_played = rounds_played
+		self.guess_count = guess_count
+		self.correct_guess_percent = correct_guess_percent
 
 	def update(self, guesses, won_game):
-		self.games_played += 1
+		self.rounds_played += 1
 		self.guess_count += guesses
 		self.wins += int(won_game)	
 		self.correct_guess_percent = "%.2f" % ((float(self.wins)*100)/self.guess_count) + '%'
@@ -20,13 +22,13 @@ class Scorecard():
 		print ''
 		print 'Your game stats'
 		print '-----------------------------'
-		print 'Games won: %d / %d' % (self.wins, self.games_played)
+		print 'Games won: %d / %d' % (self.wins, self.rounds_played)
 		print 'Correct guess percentage: %s' % (self.correct_guess_percent)
 		print '-----------------------------'
 		print ''
 
 	def print_header(self, cheat):
-		print 'ROUND: %d' % (self.games_played+1), 'GAMES WON: %d' % (self.wins)
+		print 'ROUND: %d' % (self.rounds_played+1), 'GAMES WON: %d' % (self.wins)
 		print 
 		print ''
 		print '*************************************************************************'
@@ -45,7 +47,7 @@ def play_game(Scorecard):
 	ans = s.ans
 	scram = s.scram
 	
-	clue = 'Here is your clue:'			# GamePromps class
+	clue = 'Here is your clue:'					# GamePromps class
 	cheat = '*'							# comments class
 	lose_response = ['Better luck next time!',
 		'whooo boy, that was BRUTAL!',
@@ -165,8 +167,90 @@ class GamePrompts(object):
 		            :(
 		"""
 		pass	
+
+class HighScores(object):
+# wins=0, rounds_played=0, guess_count=0, correct_guess_percent='0.00%'
+	def __init__(self):
+		self.filename = 'high_scores.txt'
+		self.score_list = None
+		try:
+			self.open_scores('r')
+			self.score_log.close()
+		except:
+			self.open_scores('w')
+			self.scores = Scorecard()
+			self.owners = Scorecard(*4*['---'])
+			
+			# this is work in progress... 
+			# works great, just needs to be organized
+			self.create_json() # test call
+			
+			self.write_scores(self.json_scores_text)
+				
+			self.score_log.close()
+			
+	def open_scores(self, mode='r'):
+		self.score_log = open('%s' % (self.filename), mode)		
+		
+	def read_scores(self):
+		self.open_scores('r')
+		self.raw_score_list = self.score_log.read()
+		print 'raw_score_list', list(self.raw_score_list)
+		self.score_log.close()
+		
+	def write_scores(self, score_list):
+		self.open_scores('w')
+		self.score_list = score_list
+		self.score_log.write(score_list)
+		self.score_log.close()
 	
+	def close(self):
+		self.score_log.close()
 	
+	def create_json(self):
+		scores_dict = {}
+		owners_dict = {}
+		
+		for p in self.scores.__dict__:
+			scores_dict[p] = self.scores.__dict__[p]
+			owners_dict[p] = self.owners.__dict__[p]
+			print p
+			print self.scores.__dict__[p]
+			print self.owners.__dict__[p]
+		
+		print '============'
+		print scores_dict
+		print owners_dict
+		
+		created_json = {'scores': scores_dict, 'owners': owners_dict}
+		print 'created_json', created_json
+		
+		print 'pretty print:'
+		print json.dumps(created_json, sort_keys=True, indent=4, separators=(',', ': '))
+		
+		self.json_scores_python = created_json
+		self.json_scores_text = json.dumps(created_json, sort_keys=True, indent=4, separators=(',', ': '))
+		'''
+		score_dict = {self.json_keys.wins: self.scores.wins
+		              ,self.json_keys.rounds_played: self.scores.rounds_played
+		              ,self.json_keys.guess_count: self.scores.guess_count
+		              ,self.json_keys.correct_guess_percent: self.scores.correct_guess_percent}
+		owners_dict = {self.json_keys.wins: self.owners.wins
+		              ,self.json_keys.rounds_played: self.owners.rounds_played
+		              ,self.json_keys.guess_count: self.owners.guess_count
+		              ,self.json_keys.correct_guess_percent: self.owners.correct_guess_percent}
+		'''
+	### not used ###
+	def unpack_scores(self):
+		self.highscores_list = []
+		self.owners_list = []
+		for s in self.raw_score_list:
+			self.highscores_list.append(s[0])
+			self.owners_list.append(s[1])
+		highscores = Scorecard(*self.highscores_list)
+		owners = Scorecard(*self.owners_list)
+		print 'unpacked'
+		
 class Engine(object):
 	
 	def __init__(self):
@@ -174,14 +258,42 @@ class Engine(object):
 	
 	def start(self):
 		print '\n\n****NEW GAME***\n\n'
+		
 		s = Scorecard()
 
 		while True:
 			os.system('cls')
 			play_game(s)
 	
-e = Engine()
 
+def run():
+	e = Engine()
 
+def test():
+	# wins=0, rounds_played=0, guess_count=0, correct_guess_percent='0.00%'
+	scores = {'scores': 
+	          {'wins': 0,
+	           'rounds_played': 0,
+	           'guess_count': 0, 
+	           'correct_guess_percent': '45.45%'
+	           },
+	          'owners':
+	          {'wins': "JT",
+	           'rounds_played': "DAD",
+	           'guess_count': "MOM", 
+	           'correct_guess_percent': "PEN"
+	           }
+	          }
+	scores_json = json.dumps(scores, sort_keys=True, indent=4, separators=(',', ': '))
+	print scores_json
+	python_obj = json.loads(scores_json)
+	print python_obj['owners']
+	print python_obj['scores']
+	
+	h = HighScores()
+	#h.read_scores()
+	#h.unpack_scores()
+
+test()
 
 

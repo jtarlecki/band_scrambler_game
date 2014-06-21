@@ -11,6 +11,7 @@ practice/
 # Piles of test data
 *.json
 *.csv
+*.txt
 
 # Compiled source #
 ###################

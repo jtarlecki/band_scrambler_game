@@ -208,21 +208,10 @@ class HighScores(object):
 		self.score_log.close()
 	
 	def create_json(self):
-		scores_dict = {}
-		owners_dict = {}
+
+		created_json = {'scores': self.class_to_dict(self.scores),
+		                'owners': self.class_to_dict(self.owners)}
 		
-		for p in self.scores.__dict__:
-			scores_dict[p] = self.scores.__dict__[p]
-			owners_dict[p] = self.owners.__dict__[p]
-			print p
-			print self.scores.__dict__[p]
-			print self.owners.__dict__[p]
-		
-		print '============'
-		print scores_dict
-		print owners_dict
-		
-		created_json = {'scores': scores_dict, 'owners': owners_dict}
 		print 'created_json', created_json
 		
 		print 'pretty print:'
@@ -230,16 +219,14 @@ class HighScores(object):
 		
 		self.json_scores_python = created_json
 		self.json_scores_text = json.dumps(created_json, sort_keys=True, indent=4, separators=(',', ': '))
-		'''
-		score_dict = {self.json_keys.wins: self.scores.wins
-		              ,self.json_keys.rounds_played: self.scores.rounds_played
-		              ,self.json_keys.guess_count: self.scores.guess_count
-		              ,self.json_keys.correct_guess_percent: self.scores.correct_guess_percent}
-		owners_dict = {self.json_keys.wins: self.owners.wins
-		              ,self.json_keys.rounds_played: self.owners.rounds_played
-		              ,self.json_keys.guess_count: self.owners.guess_count
-		              ,self.json_keys.correct_guess_percent: self.owners.correct_guess_percent}
-		'''
+
+	def class_to_dict(self, cls):
+		# turns a class into a dictionary
+		d = {}
+		for key in cls.__dict__:
+			d[key] = cls.__dict__[key]
+		return d
+		
 	### not used ###
 	def unpack_scores(self):
 		self.highscores_list = []

@@ -63,7 +63,7 @@ class Scoreboard():
 		print self.dashes
 		print ''
 
-	def print_header(self, cheat='*'):
+	def print_header(self, cheat):
 		
 		def stringify_list(mylist):
 			if type(mylist) == type([]):
@@ -76,9 +76,21 @@ class Scoreboard():
 			return pipe_cap(string)
 		
 		def pipe_cap(string):
-			return string+' |'
+			return string + ' |'
+		
+		parser = ClassParser()
 		
 		headers = ['','ROUNDS', 'WINS' , 'GUESSES', 'WIN %', 'GUESS %']
+		
+						
+		player1 = ['PLAYER 1']
+		hi_score = ['HI SCORE']
+		
+		player1.extend(parser.cls_prop_val_list_sorted(self.player1))
+		hi_score.extend(parser.cls_prop_val_list_sorted(self.highscore.scores))
+		
+		'''
+		
 		player1= ['PLAYER 1',
 		          self.player1.rounds_played,
 		          self.player1.wins,
@@ -93,7 +105,7 @@ class Scoreboard():
 		           self.highscore.scores.win_percent,
 		           self.highscore.scores.correct_guess_percent
 		           ]
-		
+		'''
 		line = '='*len(stringify_list(headers))
 		the_board = [headers, line, player1, hi_score, line]
 		
@@ -286,12 +298,14 @@ class HighScores(object):
 
 		self.filename = 'high_scores.txt'
 		self.score_list = None
+		self.parser = ClassParser()
+		
 		try:
 			self.read_scores()
-			self.init_classes()
 		except:
 			self.open_scores('w')
-			self.init_classes()
+		
+		self.init_classes()
 
 	
 	def open_scores(self, mode='r'):
@@ -316,8 +330,8 @@ class HighScores(object):
 		self.score_log.close()
 	
 	def create_json(self):
-		self.json_scores_python = {'scores': self.class_to_dict(self.scores),
-		                           'owners': self.class_to_dict(self.owners)}
+		self.json_scores_python = {'scores': self.parser.class_to_dict(self.scores),
+		                           'owners': self.parser.class_to_dict(self.owners)}
 		self.json_scores_text = json.dumps(self.json_scores_python,
 		                                   sort_keys=True,
 		                                   indent=4,
@@ -326,13 +340,6 @@ class HighScores(object):
 		print 'self.json_scores_python:', self.json_scores_python
 		print 'self.json_scores_text:'
 		print self.json_scores_text
-
-	def class_to_dict(self, cls):
-		# turns a class into a dictionary
-		d = {}
-		for key in cls.__dict__:
-			d[key] = cls.__dict__[key]
-		return d
 	
 	def init_classes(self):
 		if self.json_scores_python == None:
@@ -341,12 +348,40 @@ class HighScores(object):
 			self.create_json() 
 			self.write_scores(self.json_scores_text)
 		else:
-			self.scores = self.dict_to_cls(self.json_scores_python['scores'], Scorecard())
-			self.owners = self.dict_to_cls(self.json_scores_python['owners'], Scorecard())
+			self.scores = self.parser.dict_to_cls(self.json_scores_python['scores'], Scorecard())
+			self.owners = self.parser.dict_to_cls(self.json_scores_python['owners'], Scorecard())
 			# json already exists
 			# scores came from database
+
+class ClassParser(object):
 	
-	def cls_property_list_sorted(self, cls):			
+	def __init__(self):
+		pass
+	
+	# called from outside class
+	def class_to_dict(self, cls):
+		# turns a class into a dictionary
+		d = {}
+		for key in cls.__dict__:
+			d[key] = cls.__dict__[key]
+		return d
+		
+	# called from outside class
+	def dict_to_cls(self, dictionary, cls):
+		'''
+		pass in a dictionary and a dummy class instance
+		and get a new instance of that class,
+		instantiated with the arguments from that dictionary
+		'''
+		args = []
+		for cls_prop in self.cls_prop_name_list_sorted(cls):
+			args.append(dictionary[cls_prop])
+		return cls.__class__(*args)
+
+	def cls_prop_name_list_sorted(self, cls):			
+		# clsName:
+		# True = Return the class property names
+		# False = Return the instance's property vaules
 		'''
 		first, get a ranked list of class arguments as a list of tuples
 		then, sort the tuples by the rank number (asc)
@@ -359,32 +394,15 @@ class HighScores(object):
 		
 		for item in cls_tuples:
 			cls_list.append(item[0])
-		
 		return cls_list
-		
-	def dict_to_cls(self, dictionary, cls):
-		'''
-		pass in a dictionary and a dummy class instance
-		and get a new instance of that class,
-		instantiated with the arguments from that dictionary
-		'''
-		args = []
-		for cls_prop in self.cls_property_list_sorted(cls):
-			args.append(dictionary[cls_prop])
-		return cls.__class__(*args)
-		
-	### not used ###
-	'''
-	def unpack_scores(self):
-		self.highscores_list = []
-		self.owners_list = []
-		for s in self.raw_score_list:
-			self.highscores_list.append(s[0])
-			self.owners_list.append(s[1])
-		highscores = Scorecard(*self.highscores_list)
-		owners = Scorecard(*self.owners_list)
-		print 'unpacked'
-	'''
+	
+	def cls_prop_val_list_sorted(self, cls):
+		prop_name_list = self.cls_prop_name_list_sorted(cls)
+		d = self.class_to_dict(cls)
+		sorted_list = []
+		for prop in prop_name_list:
+			sorted_list.append(d[prop])
+		return sorted_list
 		
 class Engine(object):
 	

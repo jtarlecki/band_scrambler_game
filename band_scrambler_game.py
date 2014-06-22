@@ -13,19 +13,10 @@ compare player1's score to the highscore,
 if any are higher, prompt them for their name (under 8 digits)
 and write it to the database (aka, json to .txt file)
 
-break out some of the generic class manipulations from 
-HighScore() class, they acaully have nothing to do with the 
-class and are generic functions that could be used elsewhere
-
 consolodate screen feedback into one area
 
 make a Scoreboard.refresh() method to clean up updates to the board
 clean up the code in this class
-
-in Scoreboard class-- dynamic inputs of player1 and hi_score lists?
-these could technically come from the classes themselves, in the right
-order.. perhpas using some of the generic functions that need to 
-broke out of the HighScore() class
 
 organize this into a package.  It doens't need to be in one module.
 

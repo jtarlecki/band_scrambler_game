@@ -69,11 +69,9 @@ class Scoreboard():
 		def pipe_cap(string):
 			return string + ' |'
 		
-		parser = ClassParser()
+		parser = ClassParser() # lives and dies in this function call
 		
-		headers = ['','ROUNDS', 'WINS' , 'GUESSES', 'WIN %', 'GUESS %']
-		
-						
+		headers = ['','ROUNDS', 'WINS' , 'GUESSES', 'WIN %', 'GUESS %']			
 		player1 = ['PLAYER 1']
 		hi_score = ['HI SCORE']
 		
@@ -81,7 +79,6 @@ class Scoreboard():
 		hi_score.extend(parser.cls_prop_val_list_sorted(self.highscore.scores))
 		
 		'''
-		
 		player1= ['PLAYER 1',
 		          self.player1.rounds_played,
 		          self.player1.wins,
@@ -284,18 +281,14 @@ class HighScores(object):
 	I may be going overboard with making everything generic.
 	'''
 	def __init__(self):
-		
 		# read_scores() and write_scores() methods close the log file
-
 		self.filename = 'high_scores.txt'
 		self.score_list = None
 		self.parser = ClassParser()
-		
 		try:
 			self.read_scores()
 		except:
 			self.open_scores('w')
-		
 		self.init_classes()
 
 	
@@ -321,8 +314,9 @@ class HighScores(object):
 		self.score_log.close()
 	
 	def create_json(self):
-		self.json_scores_python = {'scores': self.parser.class_to_dict(self.scores),
-		                           'owners': self.parser.class_to_dict(self.owners)}
+		self.json_scores_python = {'scores': self.scores.__dict__,
+		                           'owners': self.owners.__dict__
+		                           }
 		self.json_scores_text = json.dumps(self.json_scores_python,
 		                                   sort_keys=True,
 		                                   indent=4,
@@ -348,14 +342,6 @@ class ClassParser(object):
 	
 	def __init__(self):
 		pass
-	
-	# called from outside class
-	def class_to_dict(self, cls):
-		# turns a class into a dictionary
-		d = {}
-		for key in cls.__dict__:
-			d[key] = cls.__dict__[key]
-		return d
 		
 	# called from outside class
 	def dict_to_cls(self, dictionary, cls):
@@ -370,9 +356,6 @@ class ClassParser(object):
 		return cls.__class__(*args)
 
 	def cls_prop_name_list_sorted(self, cls):			
-		# clsName:
-		# True = Return the class property names
-		# False = Return the instance's property vaules
 		'''
 		first, get a ranked list of class arguments as a list of tuples
 		then, sort the tuples by the rank number (asc)
@@ -389,10 +372,9 @@ class ClassParser(object):
 	
 	def cls_prop_val_list_sorted(self, cls):
 		prop_name_list = self.cls_prop_name_list_sorted(cls)
-		d = self.class_to_dict(cls)
 		sorted_list = []
 		for prop in prop_name_list:
-			sorted_list.append(d[prop])
+			sorted_list.append(cls.__dict__[prop])
 		return sorted_list
 		
 class Engine(object):

@@ -45,7 +45,9 @@ class Scoreboard():
 		self.stars = '*'*75
 		self.dashes = '-'*75
 		self.line = '_'*75
-		self.milestones = [2,50,100,250,500,1000,2500,5000]
+		self.milestones = [25,50,100,250,500,1000,2500,5000] 
+		# i figured out the mathematical way to represent this odd series
+		# put this in-- maybe include in KeyArgs class instead
 		
 	def refresh(self):
 		# at the end of each round, this should control the updates

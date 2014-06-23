@@ -3,15 +3,7 @@ from private import *
 import random
 from random import randint
 
-class Screen(object):
-	'''
-	Screen has-a Scoreboard
-	Screen has-a Game
-	     Game has-a Round
-	          Round has-a GamePrompt
-	'''
-	def __init__(self):
-		self.messages = GamePrompts()
+
 
 class Scrambler(object):
 	

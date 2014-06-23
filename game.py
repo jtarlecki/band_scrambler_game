@@ -82,7 +82,17 @@ class Scoreboard():
 		parser = ClassParser() # lives and dies in this function call
 		
 		# // TODO: make headers a class upon initializing??? they don't change!
-		headers = ['','ROUNDS', 'WINS' , 'GUESSES', 'WIN %', 'GUESS %']			
+		'''
+		self.rounds_played = rounds_played
+		self.wins = wins
+		self.guess_count = guess_count
+		self.win_percent = win_percent
+		self.correct_guess_percent = correct_guess_percent
+		self.hole_in_1s = hole_in_1s		
+		self.win_streak = win_streak
+
+		'''
+		headers = ['','ROUNDS', 'WINS' , 'GUESSES', 'WIN %', 'GUESS %', 'HOLE IN 1', 'WIN STR']
 		player1 = ['PLAYER 1']
 		hi_score = ['HI SCORE']
 		player1.extend(parser.cls_prop_val_list_sorted(self.player1))
@@ -138,68 +148,88 @@ class Scorecard():
 	             wins=0, 
 	             guess_count=0, 
 	             win_percent='0.00%', 
-	             correct_guess_percent='0.00%'):
+	             correct_guess_percent='0.00%',
+	             hole_in_1s=0,	             
+	             win_streak=0):
 		
 		self.rounds_played = rounds_played
 		self.wins = wins
 		self.guess_count = guess_count
 		self.win_percent = win_percent
 		self.correct_guess_percent = correct_guess_percent
+		self.hole_in_1s = hole_in_1s		
+		self.win_streak = win_streak
 
 	def update(self, guesses, won_game):
 		
 		def calc_percent(num, denom):
 			return "%.2f" % ((float(num)*100)/denom) + '%'
 		
+		if won_game:
+			self.wins += 1
+			self.win_streak += 1
+		else:
+			self.win_streak = 0
+		
 		self.rounds_played += 1
-		self.wins += int(won_game)	
+		if guesses==1:
+			self.hole_in_1s += 1
 		self.guess_count += guesses
 		self.win_percent = calc_percent(self.wins, self.rounds_played)
 		self.correct_guess_percent = calc_percent(self.wins, self.guess_count)
-
 		
-def play_game(scoreboard):
+		
+		
+class Round(object):
+	# this class needs some serious work
+	# does a Screen have-a Round?
 	
-	key = KeyArgs()
-	display = GamePrompts()
-
-	# local assigments
-	ans = key.ans.lower()		# local guess is lowercase
-	scram = key.scrambled_word
-	guess_limit = 3
-	guesses = 1
-	
-	#-------------HEADER-------------#
-	scoreboard.print_header()
-	display.instructions(key.cheat)
-	
-	#-------------BODY---------------#
-	display.clue(scram)
-	guess = display.guess_prompt(guesses).lower()
-	
-	while guess != ans and guesses < guess_limit:
-		if guesses == 1 and guess.lower() == key.cheat:
-			guesses +=2
-			scram = key.rescramble_word()
-			display.new_clue(scram)
-		else:
-			display.wrong_response()
-			guesses += 1
+	def __init__(self, scoreboard):
+		self.scoreboard = scoreboard
+		self.play()
+		
+	def play(self):
+		key = KeyArgs()
+		display = GamePrompts()
+		scoreboard = self.scoreboard
+		
+		# local assigments
+		ans = key.ans.lower()		# local guess is lowercase
+		scram = key.scrambled_word
+		guess_limit = 3
+		guesses = 1
+		
+		#-------------HEADER-------------#	
+		scoreboard.print_header()
+		display.instructions(key.cheat)
+		
+		#-------------BODY---------------#
+		display.clue(scram)
 		guess = display.guess_prompt(guesses).lower()
-	
-	if guess == ans:
-		display.win_response()
-		won = True
-	else:
-		display.lose_response(key.ans)
-		won = False
-	
-	scoreboard.player1.update(guesses, won)
-	scoreboard.milestone_check()		# this is a game operation
-	
-	#-------------FOOTER-------------#
-	scoreboard.results() 			# this could be phased out		
-	display.continue_message()
+		
+		while guess != ans and guesses < guess_limit:
+			if guesses == 1 and guess.lower() == key.cheat:
+				guesses +=2
+				scram = key.rescramble_word()
+				display.new_clue(scram)
+			else:
+				display.wrong_response()
+				guesses += 1
+			guess = display.guess_prompt(guesses).lower()
+		
+		if guess == ans:
+			display.win_response()
+			won = True
+		else:
+			display.lose_response(key.ans)
+			won = False
+		
+		scoreboard.player1.update(guesses, won)
+		scoreboard.milestone_check()		# this is a game operation
+		
+		#-------------FOOTER-------------#
+		scoreboard.results() 			# this could be phased out		
+		display.continue_message()
 
 			
 class HighScores(object):
@@ -216,6 +246,7 @@ class HighScores(object):
 		self.filename = 'high_scores.txt'
 		self.score_list = None
 		self.parser = ClassParser()
+		self.json_scores_python = None
 		try:
 			self.read_scores()
 		except:
@@ -308,7 +339,7 @@ class ClassParser(object):
 			sorted_list.append(cls.__dict__[prop])
 		return sorted_list
 		
-class Engine(object):
+class Play(object):
 	
 	def __init__(self):
 		self.start()
@@ -320,11 +351,11 @@ class Engine(object):
 
 		while True:
 			os.system('cls')
-			play_game(scoreboard)
+			rnd = Round(scoreboard)
 	
 
 def run():
-	e = Engine()
+	p = Play()
 
 def test():
 	# wins=0, rounds_played=0, guess_count=0, correct_guess_percent='0.00%'
